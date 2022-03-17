@@ -46,40 +46,6 @@ def getChars(input_str, language='English'):
     # return the list
     return logical_characters
 
-
-# with open('exported_db.csv', encoding='utf-8') as file:
-#     reader = csv.reader(file)
-#     next(reader)
-#     for row in reader:
-#         tempDict = {
-#             'word': row[2],
-#             'image': row[3]
-#         }
-#         englishWordList.append(tempDict)
-
-#
-# def puzzleGenerator(userWord):
-#     tempList = englishWordList.copy()
-#     random.shuffle(tempList)
-#     for i in range(5):
-#         print(f"Puzzle #{i + 1}")
-#         ans = wordParser(userWord, tempList)
-#         if ans == False:
-#             print("No more words")
-#             break
-#         print()
-#
-# def wordParser(givenWord, wordList):
-#     for char in givenWord:
-#         for item in wordList:
-#             word = item['word']
-#             if char in word:
-#                 print(f'{word} {word.index(char) + 1}/{len(word)} {item["image"]}')
-#                 wordList.remove(item)
-#                 break
-#             if wordList.index(item) == (len(wordList) - 1): #ran out of words in puzzle
-#                 return False
-
 pw = 'vasya316'
 db = 'rebus'
 #connection = createServerConnection("localhost", "root", pw)
@@ -149,7 +115,7 @@ def getWordListTelugu(givenWord):
                 break
     return wordDict
 
-def makeSlide(pr1, puzzleNum, language, logicalWord):
+def makeSlide(pr1, puzzleNum, language, logicalWord, showAns):
     slide = pr1.slides.add_slide(pr1.slide_layouts[6])
 
     title = slide.shapes.add_textbox(Inches(2), Inches(0.2), Inches(5), Inches(1))
@@ -166,7 +132,7 @@ def makeSlide(pr1, puzzleNum, language, logicalWord):
     width, height = Inches(1.5), Inches(1.5)
     # might need this tempWord = [char for char in word]
     #logicalWord = getChars(word)
-    list_of_word = []
+    list_of_words = []
     if language == 'te':
         list_of_words = getWordListTelugu(logicalWord)
     elif language == 'en':
@@ -186,7 +152,10 @@ def makeSlide(pr1, puzzleNum, language, logicalWord):
                 pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
                                                width=width, height=height)
             tb = slide.shapes.add_textbox(Inches(1 + (i*2)), topWord, Inches(1), Inches(0.5))
-            tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}' # add the actual word {list_of_words[0][0]}
+            if showAns: # for round of slides where we see the answer
+                tb.text = f'{list_of_words[0][0]} {list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'
+            else:
+                tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}' # add the actual word {list_of_words[0][0]}
             list_of_words.pop(0)
 
 
@@ -235,8 +204,12 @@ def oneWordMany():
 
 def makePowerPoint(language, logicalWord):
     pr1 = Presentation()
+    #hide the answers
     for i in range(20):
-        makeSlide(pr1, (i + 1), language, logicalWord)
+        makeSlide(pr1, (i + 1), language, logicalWord, False)
+    #show the answers
+    for i in range(20):
+        makeSlide(pr1, (i + 1), language, logicalWord, True)
     pr1.save('Rebus.pptx')
 
 @app.route('/return-file')
@@ -245,8 +218,6 @@ def return_file():
 
 @app.route('/oneWordManyPPT', methods=['POST', 'GET'])
 def oneWordManyPPT():
-    images = ['blindness.png', 'blood.png', 'boil.jpg', 'boiler.png', 'can.jpg', 'circles.png', 'clock.jpg',
-              'cockroach.png']
     if request.method == 'POST':
         puzzle_word = request.form['puzzle_word']
         logicalWord = getChars(puzzle_word)
@@ -262,6 +233,63 @@ def oneWordManyPPT():
         #return render_template('oneWordManyPPT.html')
     else:
         return render_template('oneWordManyPPT.html')
+
+@app.route('/manyWordsOnePuzzle', methods=['POST', 'GET'])
+def manyWordsOnePuzzle():
+    # return render_template('manyWordsOnePuzzle.html')
+    if request.method == 'POST':
+        puzzle_words = request.form['puzzle_words']
+        wordList = puzzle_words.split() # turn the string into a list of words, splitting at the space
+
+        allLogicalWords = [] # get a list of logical character lists
+        for word in wordList:
+            allLogicalWords.append(getChars(word))
+
+        # loop and check every word for language
+        # get a list of wordlists
+        allPuzzles = []
+        for i in range(len(wordList)):
+            if langid.classify(wordList[i])[0] == 'te':
+                allPuzzles.append(getManyLists(allLogicalWords[i], 'te', 1)[0])
+            else:
+                allPuzzles.append(getManyLists(allLogicalWords[i], 'en', 1)[0])
+        return render_template('manyWordsOnePuzzle.html', load=True, puzzle_words=wordList, all_puzzles=allPuzzles)
+    else:
+        return render_template('manyWordsOnePuzzle.html', load=False)
+
+
+@app.route('/manyWordsOnePuzzlePPT', methods=['POST', 'GET'])
+def manyWordsOnePuzzlePPT():
+    if request.method == 'POST':
+        puzzle_words = request.form['puzzle_words']
+        wordList = puzzle_words.split()  # turn the string into a list of words, splitting at the space
+
+        allLogicalWords = []  # get a list of logical character lists
+        for word in wordList:
+            allLogicalWords.append(getChars(word))
+
+        pr1 = Presentation()
+
+        # no answers
+        for i in range(len(wordList)):
+            if langid.classify(wordList[i])[0] == 'te':
+                makeSlide(pr1, 1, 'te', allLogicalWords[i], False)
+            else:
+                makeSlide(pr1, 1, 'en', allLogicalWords[i], False)
+        #show the answers this round
+        for i in range(len(wordList)):
+            if langid.classify(wordList[i])[0] == 'te':
+                makeSlide(pr1, 1, 'te', allLogicalWords[i], True)
+            else:
+                makeSlide(pr1, 1, 'en', allLogicalWords[i], True)
+
+        pr1.save('Rebus.pptx')
+
+        return send_file('C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/Rebus.pptx')
+    else:
+        return render_template('manyWordsOnePuzzlePPT.html', load=False)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
 
