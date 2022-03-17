@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}
+Rebus
+{% endblock %}
+{% block body %}
+    <div class="container d-flex aligns-items-center justify-content-center mt-5">
+        <div class="">
+            <form action="#" method="post" name="many_words_one_form" class="many_words_one_form">
+                <h3>Many Words One Puzzle</h3>
+                <input type="text" placeholder="Enter many words" class="many_words_one_input p-1" name="puzzle_words">
+                <input type="submit" class="many_words_one_submit p-1 btn-info" value="submit">
+            </form>
+        </div>
+    </div>
+{% endblock %}

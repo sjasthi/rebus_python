@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}
+Rebus
+{% endblock %}
+{% block body %}
+    <div class="container d-flex aligns-items-center justify-content-center mt-5">
+        <div class="">
+            <form action="#" method="post" name="many_words_one_form" class="many_words_one_form">
+                <h3>Many Words One Puzzle</h3>
+                <input type="text" placeholder="Enter many words" class="many_words_one_input p-1" name="puzzle_words">
+                <input type="submit" class="many_words_one_submit p-1 btn-info" value="submit">
+            </form>
+        </div>
+    </div>
+    {% if load %}
+        {% for i in range(all_puzzles.__len__())%}
+            <h1 class="container">Puzzle for "{{puzzle_words[i]}}"</h1>
+            <div class="container puzzle p-3">
+            <div class="d-flex flex-wrap">
+            {% for word in all_puzzles[i] %}
+                <div class="card me-4 mb-4 border-0" style="width: 12rem;">
+                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">
+                    <div class="card-body border border-2 border-dark rounded-bottom p-1">
+                        <p class="card-text text-center m-0">{{word[0]}}</p>
+                        <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+        {% endfor %}
+    {% endif%}
+
+<style>
+    .card-img-top{
+        height: 12rem;
+        width: 10 rem;
+        object-fill: fill;
+    }
+</style>
+{% endblock %}
