@@ -46,6 +46,7 @@ def getChars(input_str, language='English'):
     # return the list
     return logical_characters
 
+#pw = input("Enter the database password: ")
 pw = 'vasya316'
 db = 'rebus'
 #connection = createServerConnection("localhost", "root", pw)
@@ -55,7 +56,7 @@ def createDBConnection(hostName, userName, userPassword, dbName):
     connection = None
     try:
         connection = mysql.connector.connect(host = hostName, user = userName, password = userPassword, db = dbName)
-        print("MySQL database connectio successful")
+        print("MySQL database connection successful")
     except Error as e:
         print(f'Error: {e}')
     return connection
@@ -289,10 +290,81 @@ def manyWordsOnePuzzlePPT():
     else:
         return render_template('manyWordsOnePuzzlePPT.html', load=False)
 
+def many_from_list(many_word_list):
+    allPuzzles = []
+    for word1 in many_word_list:
+        wordStrings =''
+        wordStrings += f'{"".join(word1)}: '
+        #check_word1 = list(word1)
+        tempList = many_word_list.copy()
+        tempList.remove(word1)
+        for letter in word1:
+            string = ''.join(str(item) for item in tempList)
+            if letter not in string:
+                wordStrings += '??(not enough words to generate)'
+                break
+            for word2 in tempList:
+                if letter in word2:
+                    wordStrings += f'{word2.index(letter)+1}/{len(word2)}({"".join(word2)})  '
+                    #print(f'{word2.index(letter)+1}/{len(word2)}({word2})  ', end='')
+                    tempList.pop(tempList.index(word2))
+                    break
+        allPuzzles.append(wordStrings)
+    return allPuzzles
+
+@app.route('/manyFromList', methods=['POST', 'GET'])
+def manyFromList():
+    # return render_template('manyWordsOnePuzzle.html')
+    if request.method == 'POST':
+        puzzle_words = request.form['puzzle_words']
+        wordList = puzzle_words.split() # turn the string into a list of words, splitting at the space
+
+        allLogicalWords = [] # get a list of logical character lists
+        for word in wordList:
+            allLogicalWords.append(getChars(word))
+
+        allPuzzles = many_from_list(allLogicalWords)
+
+        return render_template('manyFromList.html', load=True, puzzle_words=puzzle_words, all_puzzles=allPuzzles)
+    else:
+        return render_template('manyFromList.html', load=False)
+
+def makeManyFromListSlides(pr1, listOfWords):
+    Layout = pr1.slide_layouts[6]
+    slide = pr1.slides.add_slide(Layout)
+    textbox = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(6))
+    textframe = textbox.text_frame
+    for item in listOfWords:
+        para = textframe.add_paragraph()
+        para.text = str(item)
+    textframe.fit_text()
+
+
+
+
+@app.route('/manyFromListPPT', methods=['POST', 'GET'])
+def manyFromListPPT():
+    if request.method == 'POST':
+        puzzle_words = request.form['puzzle_words']
+        wordList = puzzle_words.split()  # turn the string into a list of words, splitting at the space
+
+        allLogicalWords = []  # get a list of logical character lists
+        for word in wordList:
+            allLogicalWords.append(getChars(word))
+
+        allPuzzles = many_from_list(allLogicalWords)
+
+        pr2 = Presentation()
+        makeManyFromListSlides(pr2, allPuzzles)
+        pr2.save('manyFromList.pptx')
+
+        return send_file('C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/manyFromList.pptx')
+    else:
+        return render_template('manyFromListPPT.html', load=False)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
-
 
 # def generatePPT():
 #     with open('quotes_telugu.csv', encoding='utf-8') as file:
