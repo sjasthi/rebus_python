@@ -4,10 +4,8 @@ import csv
 import random
 import mysql.connector
 from mysql.connector import Error
-import pandas as pd
 import math
 from os.path import exists as file_exists
-from PIL import Image
 from flask import Flask, render_template, request, send_file
 import requests
 import json
