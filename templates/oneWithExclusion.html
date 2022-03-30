@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}
+Rebus
+{% endblock %}
+{% block body %}
+    <div class="container d-flex aligns-items-center justify-content-center mt-5">
+        <div class="">
+            <form action="#" method="post" name="one_from_list_form" class="one_from_list_form d-flex flex-column">
+                <h3>One With Exclusion List</h3>
+                <span>Puzzle Word</span>
+                <input type="text" name="puzzle_word" class="puzzle_word one_from_list_1" placeholder="Enter a word to create a puzzle">
+                <span class="mt-3">Exclusion Words</span>
+                <textarea rows="5" placeholder="Enter words separated by commas" class="one_from_list_2 p-1" name="exclusion_words"></textarea>
+                <input type="submit" class="one_from_list_submit p-1 btn-info" value="submit">
+            </form>
+        </div>
+    </div>
+    {% if load %}
+        {% for i in range(all_puzzles.__len__())%}
+            <h1 class="container">Puzzle for "{{puzzle_word}}"</h1>
+            <div class="container puzzle p-3">
+            <div class="d-flex flex-wrap">
+            {% for word in all_puzzles[i] %}
+                <div class="card me-4 mb-4 border-0" style="width: 12rem;">
+<!--                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">-->
+                    <img src="{{word[2]}}" class="card-img-top" alt="...">
+                    <div class="card-body border border-2 border-dark rounded-bottom p-1">
+                        <p class="card-text text-center m-0">{{word[0]}}</p>
+                        <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+        {% endfor %}
+    {% endif%}
+
+<style>
+    .card-img-top{
+        height: 12rem;
+        width: 10 rem;
+        object-fill: fill;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}
+Rebus
+{% endblock %}
+{% block body %}
+    <div class="container d-flex aligns-items-center justify-content-center mt-5">
+        <div class="">
+            <form action="#" method="post" name="one_from_list_form" class="one_from_list_form d-flex flex-column">
+                <h3>One From Given List</h3>
+                <span>Puzzle Word</span>
+                <input type="text" name="puzzle_word" class="puzzle_word one_from_list_1" placeholder="Enter a word to create a puzzle">
+                <span class="mt-3">Solution Words</span>
+                <textarea rows="5" placeholder="Enter words separated by commas" class="one_from_list_2 p-1" name="solution_words"></textarea>
+                <input type="submit" class="one_from_list_submit p-1 btn-info" value="submit">
+            </form>
+        </div>
+    </div>
+    {% if load %}
+        <h1 class="container">Puzzles for "{{puzzle_word}}"</h1>
+        <div class="container puzzle p-3">
+            <div class="d-flex flex-wrap">
+                <ol>
+                    {% for word in all_puzzles %}
+                        <span class="fs-3"><li>{{ word }}</li></span>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    {% endif%}
+
+{% endblock %}
