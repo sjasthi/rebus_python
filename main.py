@@ -81,7 +81,7 @@ for row in result:
        tempDict = {
            'telugu': row[1],
            'word': row[2],
-           'image': row[3],
+           'image': f'http://rebus.telugupuzzles.com/Images/{row[3]}',
        }
        englishTeluguWordList.append(tempDict)
 
@@ -147,8 +147,9 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns):
         for i in range(numCols):
             if not list_of_words:
                 break
+            print(f'{list_of_words[0][2]}')
             try:
-                pic = slide.shapes.add_picture(f'static/images/{list_of_words[0][2]}', Inches(1 + (i*2)), topPic, width=width, height=height)
+                pic = slide.shapes.add_picture({list_of_words[0][2]}, Inches(1 + (i*2)), topPic, width=width, height=height)
             except:
                 pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
                                                width=width, height=height)
@@ -330,14 +331,17 @@ def manyFromList():
         return render_template('manyFromList.html', load=False)
 
 def makeManyFromListSlides(pr1, listOfWords):
-    Layout = pr1.slide_layouts[6]
-    slide = pr1.slides.add_slide(Layout)
-    textbox = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(6))
-    textframe = textbox.text_frame
-    for item in listOfWords:
-        para = textframe.add_paragraph()
-        para.text = str(item)
-    textframe.fit_text()
+    n = 8
+    chunks = [listOfWords[i:i + n] for i in range(0, len(listOfWords), n)]
+    for chunk in chunks:
+        Layout = pr1.slide_layouts[6]
+        slide = pr1.slides.add_slide(Layout)
+        textbox = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(6))
+        textframe = textbox.text_frame
+        for item in chunk:
+            para = textframe.add_paragraph()
+            para.text = str(item)
+        textframe.fit_text()
 
 
 
