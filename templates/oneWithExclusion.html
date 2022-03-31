@@ -5,16 +5,19 @@ Rebus
 {% block body %}
     <div class="container d-flex aligns-items-center justify-content-center mt-5">
         <div class="">
-            <form action="#" method="post" name="many_words_one_form" class="many_words_one_form d-flex flex-column">
-                <h3>Many Words One Puzzle</h3>
-                <textarea rows="5" placeholder="Enter words separated by spaces or commas" class="many_words_one_input p-1" name="puzzle_words"></textarea>
-                <input type="submit" class="many_words_one_submit p-1 btn-info" value="submit">
+            <form action="#" method="post" name="one_from_list_form" class="one_from_list_form d-flex flex-column">
+                <h3>One With Exclusion List</h3>
+                <span>Puzzle Word</span>
+                <input type="text" name="puzzle_word" class="puzzle_word one_from_list_1" placeholder="Enter a word to create a puzzle">
+                <span class="mt-3">Exclusion Words</span>
+                <textarea rows="5" placeholder="Enter words separated by commas" class="one_from_list_2 p-1" name="exclusion_words"></textarea>
+                <input type="submit" class="one_from_list_submit p-1 btn-info" value="submit">
             </form>
         </div>
     </div>
     {% if load %}
         {% for i in range(all_puzzles.__len__())%}
-            <h1 class="container">Puzzle for "{{puzzle_words[i]}}"</h1>
+            <h1 class="container">Puzzle for "{{puzzle_word}}"</h1>
             <div class="container puzzle p-3">
             <div class="d-flex flex-wrap">
             {% for word in all_puzzles[i] %}

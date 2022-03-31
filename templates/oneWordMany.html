@@ -20,7 +20,8 @@ Rebus
             <div class="d-flex flex-wrap">
             {% for word in all_puzzles[i] %}
                 <div class="card me-4 mb-4 border-0" style="width: 12rem;">
-                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">
+<!--                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">-->
+                    <img src="{{word[2]}}" class="card-img-top" alt="...">
                     <div class="card-body border border-2 border-dark rounded-bottom p-1">
                         <p class="card-text text-center m-0">{{word[0]}}</p>
                         <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>

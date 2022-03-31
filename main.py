@@ -4,10 +4,8 @@ import csv
 import random
 import mysql.connector
 from mysql.connector import Error
-import pandas as pd
 import math
 from os.path import exists as file_exists
-from PIL import Image
 from flask import Flask, render_template, request, send_file
 import requests
 import json
@@ -81,13 +79,21 @@ for row in result:
        tempDict = {
            'telugu': row[1],
            'word': row[2],
-           'image': row[3],
+           'image': f'http://rebus.telugupuzzles.com/Images/{row[3]}',
        }
        englishTeluguWordList.append(tempDict)
 
+def removeExclusionWords(wordList, exclusionList):
+    for item in wordList:
+        for ex in exclusionList:
+            if ex in item['word'] or ex in item['telugu']:
+                wordList.remove(item)
+    return wordList
 
-def getWordListEnglish(givenWord):
+def getWordListEnglish(givenWord, exclusion=None):
     tempList = englishTeluguWordList.copy()
+    if exclusion:
+        tempList = removeExclusionWords(tempList, exclusion)
     random.shuffle(tempList)
     wordDict =[]
     #givenWord = givenWord.replace(' ', '')
@@ -101,8 +107,10 @@ def getWordListEnglish(givenWord):
                 break
     return wordDict
 
-def getWordListTelugu(givenWord):
+def getWordListTelugu(givenWord, exclusion=None):
     tempList = englishTeluguWordList.copy()
+    if exclusion:
+        tempList = removeExclusionWords(tempList, exclusion)
     random.shuffle(tempList)
     wordDict =[]
     #givenWord = givenWord.replace(' ', '')
@@ -116,7 +124,7 @@ def getWordListTelugu(givenWord):
                 break
     return wordDict
 
-def makeSlide(pr1, puzzleNum, language, logicalWord, showAns):
+def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
     slide = pr1.slides.add_slide(pr1.slide_layouts[6])
 
     title = slide.shapes.add_textbox(Inches(2), Inches(0.2), Inches(5), Inches(1))
@@ -135,9 +143,9 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns):
     #logicalWord = getChars(word)
     list_of_words = []
     if language == 'te':
-        list_of_words = getWordListTelugu(logicalWord)
+        list_of_words = getWordListTelugu(logicalWord, exclusion)
     elif language == 'en':
-        list_of_words = getWordListEnglish(logicalWord)
+        list_of_words = getWordListEnglish(logicalWord, exclusion)
     numRows = math.ceil(len(word) / 4)
     numCols = 4
 
@@ -147,8 +155,9 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns):
         for i in range(numCols):
             if not list_of_words:
                 break
+            print(f'{list_of_words[0][2]}')
             try:
-                pic = slide.shapes.add_picture(f'static/images/{list_of_words[0][2]}', Inches(1 + (i*2)), topPic, width=width, height=height)
+                pic = slide.shapes.add_picture({list_of_words[0][2]}, Inches(1 + (i*2)), topPic, width=width, height=height)
             except:
                 pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
                                                width=width, height=height)
@@ -166,15 +175,15 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns):
 #     makeSlide(pr1, (i + 1))
 # pr1.save('Rebus.pptx')
 
-def getManyLists(searchWord, language, amount):
+def getManyLists(searchWord, language, amount, exclusion=None):
     result = []
     if language =='te':
         for i in range(amount):
-            tempList = getWordListTelugu(searchWord)
+            tempList = getWordListTelugu(searchWord, exclusion)
             result.append(tempList)
     elif language =='en':
         for i in range(amount):
-            tempList = getWordListEnglish(searchWord)
+            tempList = getWordListEnglish(searchWord, exclusion)
             result.append(tempList)
     return result
 
@@ -330,14 +339,17 @@ def manyFromList():
         return render_template('manyFromList.html', load=False)
 
 def makeManyFromListSlides(pr1, listOfWords):
-    Layout = pr1.slide_layouts[6]
-    slide = pr1.slides.add_slide(Layout)
-    textbox = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(6))
-    textframe = textbox.text_frame
-    for item in listOfWords:
-        para = textframe.add_paragraph()
-        para.text = str(item)
-    textframe.fit_text()
+    n = 8
+    chunks = [listOfWords[i:i + n] for i in range(0, len(listOfWords), n)]
+    for chunk in chunks:
+        Layout = pr1.slide_layouts[6]
+        slide = pr1.slides.add_slide(Layout)
+        textbox = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(6))
+        textframe = textbox.text_frame
+        for item in chunk:
+            para = textframe.add_paragraph()
+            para.text = str(item)
+        textframe.fit_text()
 
 
 
@@ -362,6 +374,130 @@ def manyFromListPPT():
     else:
         return render_template('manyFromListPPT.html', load=False)
 
+def one_from_given_list(puzzle_word, many_word_list):
+    allPuzzles = []
+    wordStrings =''
+    wordStrings += f'{"".join(puzzle_word)}: '
+    #check_word1 = list(word1)
+    tempList = many_word_list.copy()
+    for letter in puzzle_word:
+        string = ''.join(str(item) for item in tempList)
+        if letter not in string:
+            wordStrings += '??(not enough words to generate)'
+            break
+        for word2 in tempList:
+            if letter in word2:
+                wordStrings += f'{word2.index(letter)+1}/{len(word2)}({"".join(word2)})  '
+                #print(f'{word2.index(letter)+1}/{len(word2)}({word2})  ', end='')
+                tempList.pop(tempList.index(word2))
+                break
+    allPuzzles.append(wordStrings)
+    return allPuzzles
+
+@app.route('/OneFromGivenList', methods=['POST', 'GET'])
+def oneFromGivenList():
+    # return render_template('manyWordsOnePuzzle.html')
+    if request.method == 'POST':
+        puzzle_word = request.form['puzzle_word']
+        solution_words = request.form['solution_words']
+        solution_words = solution_words.split(', ')
+
+        allLogicalWords = [] # get a list of logical character lists
+        for word in solution_words:
+             allLogicalWords.append(getChars(word))
+
+        logical_puzzle_word = getChars(puzzle_word)
+        allPuzzles = one_from_given_list(logical_puzzle_word, allLogicalWords)
+        print(allPuzzles)
+        return render_template('OneFromGivenList.html', load=True, puzzle_word=puzzle_word, all_puzzles=allPuzzles)
+    else:
+        return render_template('OneFromGivenList.html', load=False)
+
+
+@app.route('/OneFromGivenListPPT', methods=['POST', 'GET'])
+def oneFromGivenListPPT():
+    # return render_template('manyWordsOnePuzzle.html')
+    if request.method == 'POST':
+        puzzle_word = request.form['puzzle_word']
+        solution_words = request.form['solution_words']
+        solution_words = solution_words.split(', ')
+
+        allLogicalWords = [] # get a list of logical character lists
+        for word in solution_words:
+             allLogicalWords.append(getChars(word))
+
+        allPuzzles = one_from_given_list(puzzle_word, allLogicalWords)
+
+        pr2 = Presentation()
+        makeManyFromListSlides(pr2, allPuzzles)
+        pr2.save('OneFromGivenList.pptx')
+
+        return send_file(
+            'C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/OneFromGivenList.pptx')
+    else:
+        return render_template('OneFromGivenListPPT.html', load=False)
+
+@app.route('/oneWithExclusion', methods=['POST', 'GET'])
+def oneWithExclusion():
+    if request.method == 'POST':
+        puzzle_word = request.form['puzzle_word']
+        exclusion_words = request.form['exclusion_words']
+        if exclusion_words:
+            exclusion_words = exclusion_words.split(', ')
+        else:
+            exclusion_words = []
+
+        allLogicalSolutionWords = []  # get a list of logical character lists
+        for word in exclusion_words:
+            allLogicalSolutionWords.append(getChars(word))
+
+        puzzle_word_logical = getChars(puzzle_word)
+        # loop and check every word for language
+        # get a list of wordlists
+        allPuzzles = []
+        if langid.classify(puzzle_word)[0] == 'te':
+            allPuzzles.append(getManyLists(puzzle_word_logical, 'te', 1, exclusion_words)[0])
+        else:
+            allPuzzles.append(getManyLists(puzzle_word_logical, 'en', 1, exclusion_words)[0])
+
+        return render_template('oneWithExclusion.html', load=True, puzzle_word=puzzle_word, all_puzzles=allPuzzles)
+    else:
+        return render_template('oneWithExclusion.html', load=False)
+
+
+@app.route('/oneWithExclusionPPT', methods=['POST', 'GET'])
+def oneWithExclusionPPT():
+    # return render_template('manyWordsOnePuzzle.html')
+    if request.method == 'POST':
+        puzzle_word = request.form['puzzle_word']
+        exclusion_words = request.form['exclusion_words']
+        if exclusion_words:
+            exclusion_words = exclusion_words.split(', ')
+        else:
+            exclusion_words = []
+
+        allLogicalSolutionWords = []  # get a list of logical character lists
+        for word in exclusion_words:
+            allLogicalSolutionWords.append(getChars(word))
+
+
+        #-----------------
+
+        pr1 = Presentation()
+
+        # no answers
+        if langid.classify(puzzle_word)[0] == 'te':
+            makeSlide(pr1, 1, 'te', getChars(puzzle_word), False, exclusion_words)
+        else:
+            makeSlide(pr1, 1, 'en', getChars(puzzle_word), False, exclusion_words)
+
+
+        pr1.save('oneWithExclusion.pptx')
+
+        return send_file(
+            'C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/oneWithExclusion.pptx')
+    else:
+        return render_template('oneWithExclusion.html', load=False)
 
 if __name__ == "__main__":
     app.run(debug=True)
