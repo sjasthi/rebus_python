@@ -1,3 +1,5 @@
+import shutil
+
 from pptx import Presentation
 from pptx.util import Inches, Pt
 import csv
@@ -5,7 +7,7 @@ import random
 import mysql.connector
 from mysql.connector import Error
 import math
-from os.path import exists as file_exists
+from os.path import exists as file_exists, basename
 from flask import Flask, render_template, request, send_file
 import requests
 import json
@@ -76,12 +78,15 @@ result = readQuery(connection, q1)
 
 
 for row in result:
-       tempDict = {
-           'telugu': row[1],
-           'word': row[2],
-           'image': f'http://rebus.telugupuzzles.com/Images/{row[3]}',
-       }
-       englishTeluguWordList.append(tempDict)
+    row = list(row)
+    if row[3] == '':
+        row[3] = 'noImage.jpg'
+    tempDict = {
+       'telugu': row[1],
+       'word': row[2],
+       'image': f'http://rebus.telugupuzzles.com/Images/{row[3]}',
+    }
+    englishTeluguWordList.append(tempDict)
 
 def removeExclusionWords(wordList, exclusionList):
     for item in wordList:
@@ -149,15 +154,29 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
     numRows = math.ceil(len(word) / 4)
     numCols = 4
 
+    toReturn = list_of_words.copy()
+
     for j in range(numRows):
         topPic = Inches((j * 2) + 1.5)
         topWord = Inches((j * 2) + 3)
         for i in range(numCols):
             if not list_of_words:
                 break
-            print(f'{list_of_words[0][2]}')
+            #print(f'{list_of_words[0][2]}')
+            pictureURL = list_of_words[0][2]
+            r = requests.get(pictureURL, headers={"User-Agent": "html"}, stream=True)
+            if r.status_code == 200:
+                print(pictureURL)
+                try:
+                    with open(basename(pictureURL), "wb") as f:
+                        r.raw.decode_content = True
+                        shutil.copyfileobj(r.raw, f)
+                except:
+                    pass
+                    #ignore
+
             try:
-                pic = slide.shapes.add_picture({list_of_words[0][2]}, Inches(1 + (i*2)), topPic, width=width, height=height)
+                pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(1 + (i*2)), topPic, width=width, height=height)
             except:
                 pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
                                                width=width, height=height)
@@ -165,8 +184,10 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
             if showAns: # for round of slides where we see the answer
                 tb.text = f'{list_of_words[0][0]} {list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'
             else:
-                tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}' # add the actual word {list_of_words[0][0]}
+                tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])} {list_of_words[0][0]}' # add the actual word {list_of_words[0][0]}
             list_of_words.pop(0)
+
+    return toReturn
 
 
 #puzzleGenerator(word)
@@ -211,14 +232,20 @@ def oneWordMany():
     else:
         return render_template('oneWordMany.html', load=False)
 
+def makeAnswerSlides(puzzles):
+    return
+    # for puzzle in puzzles:
+    #     print(puzzle)
 
 def makePowerPoint(language, logicalWord):
     pr1 = Presentation()
     #hide the answers
-    for i in range(20):
-        makeSlide(pr1, (i + 1), language, logicalWord, False)
+    puzzles = []
+    for i in range(10):
+       puzzles.append(makeSlide(pr1, (i + 1), language, logicalWord, False))
+    makeAnswerSlides(puzzles)
     #show the answers
-    for i in range(20):
+    for i in range(10):
         makeSlide(pr1, (i + 1), language, logicalWord, True)
     pr1.save('Rebus.pptx')
 
