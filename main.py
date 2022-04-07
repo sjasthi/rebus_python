@@ -166,7 +166,7 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
             pictureURL = list_of_words[0][2]
             r = requests.get(pictureURL, headers={"User-Agent": "html"}, stream=True)
             if r.status_code == 200:
-                print(pictureURL)
+                # print(pictureURL)
                 try:
                     with open(basename(pictureURL), "wb") as f:
                         r.raw.decode_content = True
@@ -184,17 +184,37 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
             if showAns: # for round of slides where we see the answer
                 tb.text = f'{list_of_words[0][0]} {list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'
             else:
-                tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])} {list_of_words[0][0]}' # add the actual word {list_of_words[0][0]}
+                tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}' # add the actual word {list_of_words[0][0]}
             list_of_words.pop(0)
 
     return toReturn
 
 
-#puzzleGenerator(word)
-# pr1 = Presentation()
-# for i in range(100):
-#     makeSlide(pr1, (i + 1))
-# pr1.save('Rebus.pptx')
+def makeAnswerSlides(puzzles, pr1):
+    # word, index, pic
+    strings = []
+    i = 1
+    for puzzle in puzzles:
+        string = f'#{i}'
+        i += 1
+        for item in puzzle:
+            string += f' ({item[1] + 1}/{len(item[0])}) {item[0]} |'
+        strings.append(string[:-2])
+
+    #split up the powerpoint pages into max n items.
+    n = 8
+    chunks = [strings[i:i + n] for i in range(0, len(strings), n)]
+
+    for chunk in chunks:
+        Layout = pr1.slide_layouts[6]
+        slide = pr1.slides.add_slide(Layout)
+        textbox = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(6.5))
+        textframe = textbox.text_frame
+        for string in strings:
+            para = textframe.add_paragraph()
+            para.text = str(string)
+        textframe.fit_text()
+
 
 def getManyLists(searchWord, language, amount, exclusion=None):
     result = []
@@ -221,32 +241,32 @@ def oneWordMany():
     if request.method == 'POST':
         puzzle_word = request.form['puzzle_word']
         logicalWord = getChars(puzzle_word)
+        amount = request.form['owmp_amount']
+        amount = int(amount)
+
+        print(amount)
         #print(f"logical chars: {type(langid.classify(puzzle_word))}")
 
         allPuzzles = []
         if langid.classify(puzzle_word)[0] == 'te':
-            allPuzzles = getManyLists(logicalWord, 'te', 20)
+            allPuzzles = getManyLists(logicalWord, 'te', amount)
         else:
-            allPuzzles = getManyLists(logicalWord, 'en', 20)
+            allPuzzles = getManyLists(logicalWord, 'en', amount)
         return render_template('oneWordMany.html', load=True, puzzle_word=puzzle_word, all_puzzles=allPuzzles)
     else:
         return render_template('oneWordMany.html', load=False)
 
-def makeAnswerSlides(puzzles):
-    return
-    # for puzzle in puzzles:
-    #     print(puzzle)
 
-def makePowerPoint(language, logicalWord):
+
+
+def makePowerPoint(language, logicalWord, showAnswers, amount):
     pr1 = Presentation()
     #hide the answers
     puzzles = []
-    for i in range(10):
+    for i in range(amount):
        puzzles.append(makeSlide(pr1, (i + 1), language, logicalWord, False))
-    makeAnswerSlides(puzzles)
-    #show the answers
-    for i in range(10):
-        makeSlide(pr1, (i + 1), language, logicalWord, True)
+    if showAnswers:
+        makeAnswerSlides(puzzles, pr1)
     pr1.save('Rebus.pptx')
 
 @app.route('/return-file')
@@ -258,13 +278,24 @@ def oneWordManyPPT():
     if request.method == 'POST':
         puzzle_word = request.form['puzzle_word']
         logicalWord = getChars(puzzle_word)
+        amount = request.form['owmp_amount']
+        amount = int(amount)
+
+        showAnswers = False
+        try:
+            checkbox = request.form['owmp_checkbox']
+            if checkbox == 'checked':
+                showAnswers = True
+        except:
+            pass
+
         #print(f"logical chars: {type(langid.classify(puzzle_word))}")
 
         allPuzzles = []
         if langid.classify(puzzle_word)[0] == 'te':
-            makePowerPoint('te', logicalWord)
+            makePowerPoint('te', logicalWord, showAnswers, amount)
         else:
-            makePowerPoint('en', logicalWord)
+            makePowerPoint('en', logicalWord, showAnswers, amount)
 
         return send_file('C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/Rebus.pptx')
         #return render_template('oneWordManyPPT.html')
@@ -301,6 +332,14 @@ def manyWordsOnePuzzlePPT():
         puzzle_words = request.form['puzzle_words']
         wordList = puzzle_words.split()  # turn the string into a list of words, splitting at the space
 
+        showAnswers = False
+        try:
+            checkbox = request.form['mwop_checkbox']
+            if checkbox == 'checked':
+                showAnswers = True
+        except:
+            pass
+
         allLogicalWords = []  # get a list of logical character lists
         for word in wordList:
             allLogicalWords.append(getChars(word))
@@ -308,17 +347,15 @@ def manyWordsOnePuzzlePPT():
         pr1 = Presentation()
 
         # no answers
+        puzzles = []
         for i in range(len(wordList)):
             if langid.classify(wordList[i])[0] == 'te':
-                makeSlide(pr1, 1, 'te', allLogicalWords[i], False)
+                puzzles.append(makeSlide(pr1, 1, 'te', allLogicalWords[i], False))
             else:
-                makeSlide(pr1, 1, 'en', allLogicalWords[i], False)
+                puzzles.append(makeSlide(pr1, 1, 'en', allLogicalWords[i], False))
         #show the answers this round
-        for i in range(len(wordList)):
-            if langid.classify(wordList[i])[0] == 'te':
-                makeSlide(pr1, 1, 'te', allLogicalWords[i], True)
-            else:
-                makeSlide(pr1, 1, 'en', allLogicalWords[i], True)
+        if showAnswers:
+            makeAnswerSlides(puzzles, pr1)
 
         pr1.save('Rebus.pptx')
 
@@ -435,7 +472,7 @@ def oneFromGivenList():
 
         logical_puzzle_word = getChars(puzzle_word)
         allPuzzles = one_from_given_list(logical_puzzle_word, allLogicalWords)
-        print(allPuzzles)
+        # print(allPuzzles)
         return render_template('OneFromGivenList.html', load=True, puzzle_word=puzzle_word, all_puzzles=allPuzzles)
     else:
         return render_template('OneFromGivenList.html', load=False)
