@@ -5,10 +5,13 @@ Rebus
 {% block body %}
     <div class="container d-flex aligns-items-center justify-content-center mt-5">
         <div class="">
-            <form action="#" method="post">
+            <form action="#" method="post" class="d-flex flex-column">
                 <h3>One Word Many Puzzles</h3>
-                <input type="text" placeholder="Enter one word" class="p-1" name="puzzle_word">
-                <input type="submit" class="p-1 btn-info" value="submit">
+                <label for="owmp_amount"><input type="number" name="owmp_amount" id="owmp_amount" value="10" min="1" max="50" width="3">  How many puzzles?</label>
+                <div class="mt-2">
+                    <input type="text" placeholder="Enter one word" class="p-1" name="puzzle_word">
+                    <input type="submit" class="p-1 btn-info" value="submit">
+                </div>
             </form>
         </div>
     </div>

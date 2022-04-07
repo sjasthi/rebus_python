@@ -5,8 +5,12 @@ Rebus
 {% block body %}
     <div class="container d-flex aligns-items-center justify-content-center mt-5">
         <div class="">
-            <form action="#" method="post">
+            <form action="#" method="post" class="d-flex flex-column">
                 <h3>One Word Many Puzzles</h3>
+                <div>
+                    <label for="owmp_checkbox" class="mb-2 me-2"><input type="checkbox" name="owmp_checkbox" id="owmp_checkbox" value="checked">   Show Answers</label>
+                    <label for="owmp_amount"><input type="number" name="owmp_amount" id="owmp_amount" value="10" min="1" max="50" width="3">  How many puzzles?</label>
+                </div>
                 <input type="text" placeholder="Enter one word" class="p-1" name="puzzle_word">
                 <input type="submit" class="p-1 btn-info" value="submit">
             </form>
