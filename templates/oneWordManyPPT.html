@@ -8,10 +8,18 @@ Rebus
             <form action="#" method="post" class="d-flex flex-column">
                 <h3>One Word Many Puzzles</h3>
                 <div>
+                    <h6>Image preferences</h6>
+                    <label for="default"><input class="img_size_radio me-1" type="radio" name="image_size" id="default" checked value="default">Default</label>
+                    <label for="width_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="width_driven" value="width">Width Driven</label>
+                    <label for="height_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="height_driven" value="height">Height Driven</label>
+                    <input type="number" value="1.5" min="1" max="2" width="3" step="0.1" id="size_value" name="size_value">
+                    <span>Inches</span>
+                </div>
+                <div>
                     <label for="owmp_checkbox" class="mb-2 me-2"><input type="checkbox" name="owmp_checkbox" id="owmp_checkbox" value="checked">   Show Answers</label>
                     <label for="owmp_amount"><input type="number" name="owmp_amount" id="owmp_amount" value="10" min="1" max="50" width="3">  How many puzzles?</label>
                 </div>
-                <input type="text" placeholder="Enter one word" class="p-1" name="puzzle_word">
+                <input type="text" placeholder="Enter one word" class="word-input p-1" name="puzzle_word" required="required">
                 <input type="submit" class="p-1 btn-info" value="submit">
             </form>
         </div>

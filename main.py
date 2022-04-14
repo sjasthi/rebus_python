@@ -1,8 +1,8 @@
 import shutil
 
 from pptx import Presentation
+from pptx.dml.color import RGBColor
 from pptx.util import Inches, Pt
-import csv
 import random
 import mysql.connector
 from mysql.connector import Error
@@ -13,8 +13,10 @@ import requests
 import json
 import langid
 
+
+
 #word = input("Enter some word for the puzzle: ")
-word = "అలంకరణ"
+#word = "అలంకరణ"
 englishTeluguWordList = []
 
 
@@ -129,7 +131,7 @@ def getWordListTelugu(givenWord, exclusion=None):
                 break
     return wordDict
 
-def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
+def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type = 'default', exclusion = None):
     slide = pr1.slides.add_slide(pr1.slide_layouts[6])
 
     title = slide.shapes.add_textbox(Inches(2), Inches(0.2), Inches(5), Inches(1))
@@ -142,8 +144,24 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
     font = run.font
     font.name = 'Calibri'
     font.size = Pt(64)
+    font.bold = True
 
-    width, height = Inches(1.5), Inches(1.5)
+    numRows = math.ceil(len(logicalWord) / 4)
+    numCols = 4
+
+    width, height = Inches(dist), Inches(dist)
+    if type == 'default':
+        width, height = Inches(1.5), Inches(1.5)
+    elif type == 'width':
+        width = Inches(dist)
+        if dist > 2.5:
+            numCols -= 1
+            numRows = math.ceil(len(logicalWord) / numCols)
+    elif type == 'height':
+        height = Inches(dist)
+        if dist > 2.5:
+            numRows += 1
+            numCols -= 1
     # might need this tempWord = [char for char in word]
     #logicalWord = getChars(word)
     list_of_words = []
@@ -151,10 +169,12 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
         list_of_words = getWordListTelugu(logicalWord, exclusion)
     elif language == 'en':
         list_of_words = getWordListEnglish(logicalWord, exclusion)
-    numRows = math.ceil(len(word) / 4)
-    numCols = 4
+
+
+    print(logicalWord)
 
     toReturn = list_of_words.copy()
+    textColor = RGBColor(255, 120, 210)
 
     for j in range(numRows):
         topPic = Inches((j * 2) + 1.5)
@@ -173,19 +193,55 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, exclusion = None):
                         shutil.copyfileobj(r.raw, f)
                 except:
                     pass
-                    #ignore
+            if type == 'default':
+                try:
+                    pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(1 + (i*2)), topPic, width=width, height=height)
+                except:
+                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
+                                                   width=width, height=height)
+                tb = slide.shapes.add_textbox(Inches(1 + (i*2)), topWord, Inches(1), Inches(0.5))
 
-            try:
-                pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(1 + (i*2)), topPic, width=width, height=height)
-            except:
-                pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
-                                               width=width, height=height)
-            tb = slide.shapes.add_textbox(Inches(1 + (i*2)), topWord, Inches(1), Inches(0.5))
-            if showAns: # for round of slides where we see the answer
-                tb.text = f'{list_of_words[0][0]} {list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'
-            else:
                 tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}' # add the actual word {list_of_words[0][0]}
-            list_of_words.pop(0)
+                list_of_words.pop(0)
+            elif type == 'width':
+                try:
+                    pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(1 + (i * 2)), topPic,
+                                                   width=width)
+                except:
+                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
+                                                   width=width, height=height)
+                tb = slide.shapes.add_textbox(Inches(1 + (i * 2)), topPic, Inches(1), Inches(0.5))
+                tf = tb.text_frame
+
+                p = tf.paragraphs[0]
+                run = p.add_run()
+                run.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'
+
+                font = run.font
+                font.name = 'Calibri'
+                font.size = Pt(12)
+                font.bold = True
+                font.color.rgb = textColor
+                list_of_words.pop(0)
+            elif type == 'height':
+                try:
+                    pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(1 + (i * 2)), topPic,
+                                                   width=width)
+                except:
+                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic, height=height)
+                tb = slide.shapes.add_textbox(Inches(1 + (i * 2)), topPic, Inches(1), Inches(0.5))
+                tf = tb.text_frame
+
+                p = tf.paragraphs[0]
+                run = p.add_run()
+                run.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'
+
+                font = run.font
+                font.name = 'Calibri'
+                font.size = Pt(12)
+                font.bold = True
+                font.color.rgb = textColor
+                list_of_words.pop(0)
 
     return toReturn
 
@@ -210,7 +266,7 @@ def makeAnswerSlides(puzzles, pr1):
         slide = pr1.slides.add_slide(Layout)
         textbox = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(6.5))
         textframe = textbox.text_frame
-        for string in strings:
+        for string in chunk:
             para = textframe.add_paragraph()
             para.text = str(string)
         textframe.fit_text()
@@ -259,12 +315,17 @@ def oneWordMany():
 
 
 
-def makePowerPoint(language, logicalWord, showAnswers, amount):
+def makePowerPoint(language, logicalWord, showAnswers, amount, type, size):
     pr1 = Presentation()
     #hide the answers
     puzzles = []
+    #if word is greater than 12 letters, it's split up amongst multiple pages
+    n = 12
+    chunks = [logicalWord[i:i + n] for i in range(0, len(logicalWord), n)]
+
     for i in range(amount):
-       puzzles.append(makeSlide(pr1, (i + 1), language, logicalWord, False))
+        for chunk in chunks:
+            puzzles.append(makeSlide(pr1, (i + 1), language, chunk, False, size, type))
     if showAnswers:
         makeAnswerSlides(puzzles, pr1)
     pr1.save('Rebus.pptx')
@@ -276,6 +337,8 @@ def return_file():
 @app.route('/oneWordManyPPT', methods=['POST', 'GET'])
 def oneWordManyPPT():
     if request.method == 'POST':
+        size = float(request.form['size_value'])
+        type = request.form['image_size']
         puzzle_word = request.form['puzzle_word']
         logicalWord = getChars(puzzle_word)
         amount = request.form['owmp_amount']
@@ -293,9 +356,9 @@ def oneWordManyPPT():
 
         allPuzzles = []
         if langid.classify(puzzle_word)[0] == 'te':
-            makePowerPoint('te', logicalWord, showAnswers, amount)
+            makePowerPoint('te', logicalWord, showAnswers, amount, type, size)
         else:
-            makePowerPoint('en', logicalWord, showAnswers, amount)
+            makePowerPoint('en', logicalWord, showAnswers, amount, type, size)
 
         return send_file('C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/Rebus.pptx')
         #return render_template('oneWordManyPPT.html')
@@ -329,6 +392,8 @@ def manyWordsOnePuzzle():
 @app.route('/manyWordsOnePuzzlePPT', methods=['POST', 'GET'])
 def manyWordsOnePuzzlePPT():
     if request.method == 'POST':
+        size = float(request.form['size_value'])
+        type = request.form['image_size']
         puzzle_words = request.form['puzzle_words']
         wordList = puzzle_words.split()  # turn the string into a list of words, splitting at the space
 
@@ -349,10 +414,14 @@ def manyWordsOnePuzzlePPT():
         # no answers
         puzzles = []
         for i in range(len(wordList)):
-            if langid.classify(wordList[i])[0] == 'te':
-                puzzles.append(makeSlide(pr1, 1, 'te', allLogicalWords[i], False))
-            else:
-                puzzles.append(makeSlide(pr1, 1, 'en', allLogicalWords[i], False))
+            lw = allLogicalWords[i]
+            n = 12
+            chunks = [lw[i:i + n] for i in range(0, len(lw), n)]
+            for chunk in chunks:
+                if langid.classify(wordList[i])[0] == 'te':
+                    puzzles.append(makeSlide(pr1, i + 1, 'te', chunk, False, size, type))
+                else:
+                    puzzles.append(makeSlide(pr1, i + 1, 'en', chunk, False, size, type))
         #show the answers this round
         if showAnswers:
             makeAnswerSlides(puzzles, pr1)
@@ -533,6 +602,16 @@ def oneWithExclusion():
 def oneWithExclusionPPT():
     # return render_template('manyWordsOnePuzzle.html')
     if request.method == 'POST':
+        size = float(request.form['size_value'])
+        type = request.form['image_size']
+        showAnswers = False
+        try:
+            checkbox = request.form['owmp_checkbox']
+            if checkbox == 'checked':
+                showAnswers = True
+        except:
+            pass
+
         puzzle_word = request.form['puzzle_word']
         exclusion_words = request.form['exclusion_words']
         if exclusion_words:
@@ -544,24 +623,27 @@ def oneWithExclusionPPT():
         for word in exclusion_words:
             allLogicalSolutionWords.append(getChars(word))
 
-
-        #-----------------
-
         pr1 = Presentation()
+        logicalWord = getChars(puzzle_word)
+        n = 12
+        chunks = [logicalWord[i:i + n] for i in range(0, len(logicalWord), n)]
 
-        # no answers
-        if langid.classify(puzzle_word)[0] == 'te':
-            makeSlide(pr1, 1, 'te', getChars(puzzle_word), False, exclusion_words)
-        else:
-            makeSlide(pr1, 1, 'en', getChars(puzzle_word), False, exclusion_words)
+        puzzles = []
+        for chunk in chunks:
+            if langid.classify(puzzle_word)[0] == 'te':
+               puzzles.append( makeSlide(pr1, 1, 'te', chunk, False, size, type, exclusion_words))
+            else:
+                puzzles.append(makeSlide(pr1, 1, 'en', chunk, False, size, type, exclusion_words))
 
+        if showAnswers:
+            makeAnswerSlides(puzzles, pr1)
 
         pr1.save('oneWithExclusion.pptx')
 
         return send_file(
             'C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/oneWithExclusion.pptx')
     else:
-        return render_template('oneWithExclusion.html', load=False)
+        return render_template('oneWithExclusionPPT.html', load=False)
 
 if __name__ == "__main__":
     app.run(debug=True)

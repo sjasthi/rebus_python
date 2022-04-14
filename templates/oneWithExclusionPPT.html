@@ -7,6 +7,17 @@ Rebus
         <div class="">
             <form action="#" method="post" name="one_from_list_form" class="one_from_list_form d-flex flex-column">
                 <h3>One With Exclusion List</h3>
+                <div>
+                    <h6>Image preferences</h6>
+                    <label for="default"><input class="img_size_radio me-1" type="radio" name="image_size" id="default" checked value="default">Default</label>
+                    <label for="width_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="width_driven" value="width">Width Driven</label>
+                    <label for="height_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="height_driven" value="height">Height Driven</label>
+                    <input type="number" value="1.5" min="1" max="2" width="3" step="0.1" id="size_value" name="size_value">
+                    <span>Inches</span>
+                </div>
+                <div>
+                    <label for="owmp_checkbox" class="mb-2 me-2"><input type="checkbox" name="owmp_checkbox" id="owmp_checkbox" value="checked">   Show Answers</label>
+                </div>
                 <span>Puzzle Word</span>
                 <input type="text" name="puzzle_word" class="puzzle_word one_from_list_1" placeholder="Enter a word to create a puzzle">
                 <span class="mt-3">Exclusion Words</span>
