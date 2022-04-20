@@ -28,12 +28,14 @@ Rebus
             <div class="container puzzle p-3">
             <div class="d-flex flex-wrap">
             {% for word in all_puzzles[i] %}
-                <div class="card me-4 mb-4 border-0" style="width: 12rem;">
-<!--                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">-->
-                    <img src="{{word[2]}}" class="card-img-top" alt="...">
+                <div class="me-4 mb-4">
+                    <div class="card  border-0" style="width: 12rem;">
+    <!--                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">-->
+                        <img src="{{word[2]}}" class="card-img-top" alt="...">
+                    </div>
                     <div class="card-body border border-2 border-dark rounded-bottom p-1">
-                        <p class="answer_word card-text text-center m-0" style="display: none;">{{word[0]}}</p>
-                        <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>
+                            <p class="answer_word card-text text-center m-0" style="display: none;">{{word[0]}}</p>
+                            <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>
                     </div>
                 </div>
             {% endfor %}
@@ -47,6 +49,13 @@ Rebus
         height: 12rem;
         width: 10 rem;
         object-fill: fill;
+    }
+    .card-body{
+        height: 35px;
+        width: 100px;
+        margin: 0 auto;
+        background-color: white;
+        margin-top: 15px;
     }
 </style>
 {% endblock %}

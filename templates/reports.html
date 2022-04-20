@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}
+Rebus
+{% endblock %}
+{% block body %}
+<div class="ms-5 mt-5">
+    <form action="#" method="post" class="d-flex">
+        <select class="form-select form-select-sm mb-1" name="language" id="" style="width: 200px;">
+            <option value="word">Sort English</option>
+            <option value="telugu">Sort Telugu</option>
+        </select>
+        <input type="submit" value="update" class="p-1 ms-2 btn-info">
+    </form>
+<table >
+    <tr>
+        <th class="pe-3">#</th>
+        <th>English Word</th>
+        <th>Telugu Word</th>
+    </tr>
+
+{% for i in range(words.__len__())%}
+    <tr>
+        <td class="pe-3">{{i}}.</td>
+        <td>{{words[i]['word']}}</td>
+        <td>{{words[i]['telugu']}}</td>
+    </tr>
+{% endfor %}
+</table>
+</div>
+
+{% endblock %}

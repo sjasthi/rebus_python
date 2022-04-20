@@ -6,13 +6,20 @@ Rebus
     <div class="container d-flex aligns-items-center justify-content-center mt-5">
         <div class="">
             <form action="#" method="post" class="d-flex flex-column">
-                <h3>One Word Many Puzzles</h3>
+                <h3>One Word Many Puzzles PowerPoint</h3>
+                <div class="mb-2">
+                    <h6>Image display preferences</h6>
+                    <label for="show"><input class="me-1" type="radio" name="display" id="show" checked value="None">Show images</label>
+                    <label for="mask"><input class="me-1" type="radio" name="display" id="mask" value="mask">Mask Images</label>
+                    <label for="numbers_only"><input class="me-1" type="radio" name="display" id="numbers_only" value="numbers_only">Numbers Only</label>
+                    <label for="letters_only"><input class="me-1" type="radio" name="display" id="letters_only" value="letters_only">Letters Only</label>
+                </div>
                 <div>
-                    <h6>Image preferences</h6>
+                    <h6>Image size preferences</h6>
                     <label for="default"><input class="img_size_radio me-1" type="radio" name="image_size" id="default" checked value="default">Default</label>
                     <label for="width_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="width_driven" value="width">Width Driven</label>
                     <label for="height_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="height_driven" value="height">Height Driven</label>
-                    <input type="number" value="1.5" min="1" max="2" width="3" step="0.1" id="size_value" name="size_value">
+                    <input type="number" value="1.5" min="1" max="3" width="3" step="0.1" id="size_value" name="size_value">
                     <span>Inches</span>
                 </div>
                 <div>
