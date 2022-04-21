@@ -7,9 +7,22 @@ Rebus
         <div class="">
             <form action="#" method="post" class="d-flex flex-column">
                 <h3>One Word Many Puzzles</h3>
-                <label for="owmp_amount"><input type="number" name="owmp_amount" id="owmp_amount" value="10" min="1" max="50" width="3">  How many puzzles?</label>
+                <div>
+                    <h6>Image preferences</h6>
+                    <label for="default"><input class="img_size_radio me-1" type="radio" name="image_size" id="default" checked>Default</label>
+                    <label for="width_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="width_driven">Width Driven</label>
+                    <label for="height_driven"><input class="img_size_radio me-1" type="radio" name="image_size" id="height_driven">Height Driven</label>
+                    <input type="number" value="" min="25" max="300" width="3" id="size_value">
+                    <span>pixels</span>
+                    <input type="button" value="Update" class="update_height_width_btn">
+                </div>
+                <div>
+                    <label for="owmp_amount"><input type="number" name="owmp_amount" id="owmp_amount" value="10" min="1" max="50" width="3">  How many puzzles?</label>
+                    <label for="show_answers_checkbox"><input type="checkbox" id="show_answers_checkbox">  Show answers?</label>
+                </div>
+
                 <div class="mt-2">
-                    <input type="text" placeholder="Enter one word" class="p-1" name="puzzle_word">
+                    <input type="text" placeholder="Enter one word" class="p-1" name="puzzle_word" required="required">
                     <input type="submit" class="p-1 btn-info" value="submit">
                 </div>
             </form>
@@ -22,12 +35,14 @@ Rebus
             <h3 class="my-3">Puzzle {{i + 1}}</h3>
             <div class="d-flex flex-wrap">
             {% for word in all_puzzles[i] %}
-                <div class="card me-4 mb-4 border-0" style="width: 12rem;">
-<!--                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">-->
-                    <img src="{{word[2]}}" class="card-img-top" alt="...">
+                <div class="me-4 mb-4">
+                    <div class="card  border-0" style="width: 12rem;">
+    <!--                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">-->
+                        <img src="{{word[2]}}" class="card-img-top" alt="...">
+                    </div>
                     <div class="card-body border border-2 border-dark rounded-bottom p-1">
-                        <p class="card-text text-center m-0">{{word[0]}}</p>
-                        <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>
+                            <p class="answer_word card-text text-center m-0" style="display: none;">{{word[0]}}</p>
+                            <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>
                     </div>
                 </div>
             {% endfor %}
@@ -40,7 +55,14 @@ Rebus
     .card-img-top{
         height: 12rem;
         width: 10 rem;
-        object-fill: fill;
+        object-fit: fill;
+    }
+    .card-body{
+        height: 35px;
+        width: 100px;
+        margin: 0 auto;
+        background-color: white;
+        margin-top: 15px;
     }
 </style>
 {% endblock %}
