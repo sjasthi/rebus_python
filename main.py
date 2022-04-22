@@ -1,5 +1,4 @@
 import shutil
-
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Inches, Pt
@@ -13,6 +12,9 @@ import requests
 import json
 import langid
 
+pw = input("Enter the database password: ")
+# pw = 'vasya316'
+db = 'rebus'
 
 #word = input("Enter some word for the puzzle: ")
 #word = "అలంకరణ"
@@ -48,9 +50,7 @@ def getChars(input_str, language='English'):
     return logical_characters
 
 
-#pw = input("Enter the database password: ")
-pw = 'vasya316'
-db = 'rebus'
+
 #connection = createServerConnection("localhost", "root", pw)
 
 
@@ -137,8 +137,8 @@ def getWordListTelugu(givenWord, exclusion=None):
 
 
 def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type = 'default', exclusion = None, dis_pref = 'None'):
-    if type == 'default':
-        dist = 1.5
+    # if type == 'default':
+    #     dist = 1.5
 
     slide = pr1.slides.add_slide(pr1.slide_layouts[6])
 
@@ -166,8 +166,8 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
 
     width, height = Inches(dist), Inches(dist)
     if type == 'default':
-        width, height = Inches(1.5), Inches(1.5)
-        numCols = math.floor(9 / dist)
+        width, height = Inches(dist), Inches(dist)
+        numCols = math.floor(9 / (dist))
         numRows = math.floor(6.5 / dist)
     elif type == 'width':
         width = Inches(dist)
@@ -192,12 +192,10 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
         for i in range(numCols):
             if not list_of_words:
                 break
-            #print(f'{list_of_words[0][2]}')
             if dis_pref == 'None': #
                 pictureURL = list_of_words[0][2]
                 r = requests.get(pictureURL, headers={"User-Agent": "html"}, stream=True)
                 if r.status_code == 200:
-                    # print(pictureURL)
                     try:
                         with open(basename(pictureURL), "wb") as f:
                             r.raw.decode_content = True
@@ -211,8 +209,6 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
                     elif dis_pref == 'numbers_only':
                         pass
                     elif dis_pref == 'letters_only':
-                        print(numRows)
-                        print(numCols)
                         tb = slide.shapes.add_textbox(Inches(.25 + (i * dist)), topPic,width=width, height=height)
                         tf = tb.text_frame
 
@@ -231,9 +227,12 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
                 except:
                     pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
                                                    width=width, height=height)
-                tb = slide.shapes.add_textbox(Inches(.25 + (i*dist)), topWord, Inches(1), Inches(0.5))
+                tb = slide.shapes.add_textbox(Inches(.25 + (i*dist)), topWord, Inches(1), Inches(0.35))
 
                 tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}' # add the actual word {list_of_words[0][0]}
+                line = tb.line
+                line.color.rgb = RGBColor(0, 0, 0)
+
                 list_of_words.pop(0)
             elif type == 'width':
                 try:
@@ -314,9 +313,6 @@ def oneWordMany():
         amount = request.form['owmp_amount']
         amount = int(amount)
 
-        # print(amount)
-        #print(f"logical chars: {type(langid.classify(puzzle_word))}")
-
         allPuzzles = []
         if langid.classify(puzzle_word)[0] == 'te':
             allPuzzles = getManyLists(logicalWord, 'te', amount)
@@ -349,7 +345,6 @@ def oneWordManyPPT():
     if request.method == 'POST':
         size = float(request.form['size_value'])
         display_type = request.form['display']
-        print(display_type)
         type = request.form['image_size']
         puzzle_word = request.form['puzzle_word']
         logicalWord = getChars(puzzle_word)
@@ -364,15 +359,13 @@ def oneWordManyPPT():
         except:
             pass
 
-        #print(f"logical chars: {type(langid.classify(puzzle_word))}")
-
         allPuzzles = []
         if langid.classify(puzzle_word)[0] == 'te':
             makePowerPoint('te', logicalWord, showAnswers, amount, type, size, display_type)
         else:
             makePowerPoint('en', logicalWord, showAnswers, amount, type, size, display_type)
 
-        return send_file('C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/Rebus.pptx')
+        return send_file('Rebus.pptx')
         #return render_template('oneWordManyPPT.html')
     else:
         return render_template('oneWordManyPPT.html')
@@ -437,9 +430,9 @@ def manyWordsOnePuzzlePPT():
         if showAnswers:
             makeAnswerSlides(puzzles, pr1)
 
-        pr1.save('Rebus.pptx')
+        pr1.save('manyWordsOnePuzzle.pptx')
 
-        return send_file('C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/Rebus.pptx')
+        return send_file('manyWordsOnePuzzle.pptx')
     else:
         return render_template('manyWordsOnePuzzlePPT.html', load=False)
 
@@ -459,7 +452,6 @@ def many_from_list(many_word_list):
             for word2 in tempList:
                 if letter in word2:
                     wordStrings += f'{word2.index(letter)+1}/{len(word2)}({"".join(word2)})  '
-                    #print(f'{word2.index(letter)+1}/{len(word2)}({word2})  ', end='')
                     tempList.pop(tempList.index(word2))
                     break
         allPuzzles.append(wordStrings)
@@ -514,7 +506,7 @@ def manyFromListPPT():
         makeManyFromListSlides(pr2, allPuzzles)
         pr2.save('manyFromList.pptx')
 
-        return send_file('C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/manyFromList.pptx')
+        return send_file('manyFromList.pptx')
     else:
         return render_template('manyFromListPPT.html', load=False)
 
@@ -532,7 +524,6 @@ def one_from_given_list(puzzle_word, many_word_list):
         for word2 in tempList:
             if letter in word2:
                 wordStrings += f'{word2.index(letter)+1}/{len(word2)}({"".join(word2)})  '
-                #print(f'{word2.index(letter)+1}/{len(word2)}({word2})  ', end='')
                 tempList.pop(tempList.index(word2))
                 break
     allPuzzles.append(wordStrings)
@@ -552,7 +543,6 @@ def oneFromGivenList():
 
         logical_puzzle_word = getChars(puzzle_word)
         allPuzzles = one_from_given_list(logical_puzzle_word, allLogicalWords)
-        # print(allPuzzles)
         return render_template('OneFromGivenList.html', load=True, puzzle_word=puzzle_word, all_puzzles=allPuzzles)
     else:
         return render_template('OneFromGivenList.html', load=False)
@@ -576,8 +566,7 @@ def oneFromGivenListPPT():
         makeManyFromListSlides(pr2, allPuzzles)
         pr2.save('OneFromGivenList.pptx')
 
-        return send_file(
-            'C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/OneFromGivenList.pptx')
+        return send_file('OneFromGivenList.pptx')
     else:
         return render_template('OneFromGivenListPPT.html', load=False)
 
@@ -651,8 +640,7 @@ def oneWithExclusionPPT():
 
         pr1.save('oneWithExclusion.pptx')
 
-        return send_file(
-            'C:/Users/bv2737dg/Documents/School/2022/499 Capstone (Wed)/Rebus/rebus_python/oneWithExclusion.pptx')
+        return send_file('oneWithExclusion.pptx')
     else:
         return render_template('oneWithExclusionPPT.html', load=False)
 
