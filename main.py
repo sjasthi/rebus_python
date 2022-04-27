@@ -13,7 +13,6 @@ import json
 import langid
 
 pw = input("Enter the database password: ")
-# pw = 'vasya316'
 db = 'rebus'
 
 #word = input("Enter some word for the puzzle: ")
@@ -175,7 +174,7 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
         numRows = math.floor(6.5/((1.25 * dist) + .25))
     elif type == 'height':
         height = Inches(dist)
-        numRows = math.floor(6.5/dist)
+        numRows = math.floor(6.5/(dist + .35))
         numCols = math.floor(9.0/(1.5 * dist) + .25)
 
     maxFit = numRows * numCols
@@ -190,6 +189,7 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
         topPic = Inches((j * (dist * 1.25 + .5)) + 1.5)
         topWord = Inches((j * (dist * 1.25 + .5)) + 1)
         for i in range(numCols):
+            side_dist = Inches(.25 + (i*(dist +.25)))
             if not list_of_words:
                 break
             if dis_pref == 'None': #
@@ -205,11 +205,11 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
             if type == 'default' or dis_pref == 'mask' or dis_pref == 'numbers_only' or dis_pref == 'letters_only':
                 try:
                     if dis_pref == 'mask':
-                        pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(.25 + (i * dist)), topPic,width=width, height=height)
+                        pic = slide.shapes.add_picture(f'static/images/_not_found.png', side_dist, topPic,width=width, height=height)
                     elif dis_pref == 'numbers_only':
                         pass
                     elif dis_pref == 'letters_only':
-                        tb = slide.shapes.add_textbox(Inches(.25 + (i * dist)), topPic,width=width, height=height)
+                        tb = slide.shapes.add_textbox(side_dist, topPic,width=width, height=height)
                         tf = tb.text_frame
 
                         p = tf.paragraphs[0]
@@ -222,12 +222,12 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
                         font.bold = True
 
                         wordIndex += 1
-                    else:
-                        pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(.25 + (i*dist)), topPic, width=width, height=height)
+                    else: # default
+                        pic = slide.shapes.add_picture(basename(list_of_words[0][2]), side_dist, topPic, width=width, height=height)
                 except:
-                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(1 + (i * 2)), topPic,
+                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', side_dist, topPic,
                                                    width=width, height=height)
-                tb = slide.shapes.add_textbox(Inches(.25 + (i*dist)), topWord, Inches(1), Inches(0.35))
+                tb = slide.shapes.add_textbox(side_dist, topWord, Inches(1), Inches(0.35))
 
                 tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}' # add the actual word {list_of_words[0][0]}
                 line = tb.line
@@ -236,24 +236,32 @@ def makeSlide(pr1, puzzleNum, language, logicalWord, showAns, dist = 1.5, type =
                 list_of_words.pop(0)
             elif type == 'width':
                 try:
-                    pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(.25 + (i * dist)), topPic,
+                    pic = slide.shapes.add_picture(basename(list_of_words[0][2]), side_dist, topPic,
                                                    width=width)
                 except:
-                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(.25 + (i * dist)), topPic,
+                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', side_dist, topPic,
                                                    width=width, height=height)
-                tb = slide.shapes.add_textbox(Inches(.25 + (i * dist)), topWord, Inches(1), Inches(0.5))
+                tb = slide.shapes.add_textbox(side_dist, topWord, Inches(1), Inches(0.35))
 
-                tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'  # add the actual word {list_of_words[0][0]}
+                tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'
+                line = tb.line
+                line.color.rgb = RGBColor(0, 0, 0)
+                # add the actual word {list_of_words[0][0]}
                 list_of_words.pop(0)
             elif type == 'height':
+                side_dist = Inches(.25 + (i * ((dist * 1.5)+ .25))) # Inches(<side space> + (< col num > * (dist * < aspect ratio > + < space between pics >)))
                 try:
-                    pic = slide.shapes.add_picture(basename(list_of_words[0][2]), Inches(.25 + (i * (dist * 1.5))), topPic,
+                    pic = slide.shapes.add_picture(basename(list_of_words[0][2]), side_dist, topPic,
                                                    height=height)
                 except:
-                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', Inches(.25 + (i * (dist * 1.5))), topPic, height=height)
-                tb = slide.shapes.add_textbox(Inches(.25 + (i * (dist * 1.5))), topWord, Inches(1), Inches(0.5))
+                    pic = slide.shapes.add_picture(f'static/images/_not_found.png', side_dist, topPic, height=height)
+                tb = slide.shapes.add_textbox(side_dist, topWord, Inches(1), Inches(0.35))
 
                 tb.text = f'{list_of_words[0][1] + 1}/{len(list_of_words[0][0])}'  # add the actual word {list_of_words[0][0]}
+
+                line = tb.line
+                line.color.rgb = RGBColor(0, 0, 0)
+
                 list_of_words.pop(0)
 
     return toReturn

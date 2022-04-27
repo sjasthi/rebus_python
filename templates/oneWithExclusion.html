@@ -36,7 +36,7 @@ Rebus
     <!--                    <img src="static/images/{{word[2]}}" class="card-img-top" alt="...">-->
                         <img src="{{word[2]}}" class="card-img-top" alt="...">
                     </div>
-                    <div class="card-body border border-2 border-dark rounded-bottom p-1">
+                    <div class="card-body1 border border-2 border-dark rounded-bottom p-1">
                             <p class="answer_word card-text text-center m-0" style="display: none;">{{word[0]}}</p>
                             <p class="card-text text-center ">{{ word[1] + 1 }} / {{ word[0].__len__() }}</p>
                     </div>
@@ -51,10 +51,10 @@ Rebus
     .card-img-top{
         height: 12rem;
         width: 10 rem;
-        object-fill: fill;
+        object-fit: fill;
     }
-    .card-body{
-        height: 35px;
+    .card-body1{
+        min-height: 35px !important;
         width: 100px;
         margin: 0 auto;
         background-color: white;
