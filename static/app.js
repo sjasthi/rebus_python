@@ -15,17 +15,30 @@ manyWordsOneForm.forEach((form) => {
 
 function validateManyWords() {
   let val = document.forms["many_words_one_form"]["puzzle_words"].value;
-
   if (val.includes(",")) {
     words = val.split(", ");
+    console.log(word.length)
+    console.log('a')
     if (words.length < 2) {
       return false;
     }
   }
-  words = val.split(" ");
-  if (words.length < 2) {
-    return false;
-  }
+  if (val.includes(" ")) {
+      words = val.split(" ");
+      console.log(word.length)
+    console.log('a')
+      if (words.length < 2) {
+        return false;
+      }
+     }
+   if (val.includes("\n")) {
+      words = val.split("\n");
+      console.log(word.length)
+    console.log('a')
+      if (words.length < 2) {
+        return false;
+      }
+     }
 
   return true;
 }

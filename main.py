@@ -15,8 +15,6 @@ import langid
 pw = input("Enter the database password: ")
 db = 'rebus'
 
-#word = input("Enter some word for the puzzle: ")
-#word = "అలంకరణ"
 englishTeluguWordList = []
 
 
@@ -665,16 +663,7 @@ def reports():
         return render_template('reports.html', words = words)
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
-# def generatePPT():
-#     with open('quotes_telugu.csv', encoding='utf-8') as file:
-#         reader = csv.reader(file)
-#         for row in reader:
-#             line = row[1].replace("’", "'")
-#             charList = getChars(line)
-#
-
+    app.run(debug=False)
 
 
 
