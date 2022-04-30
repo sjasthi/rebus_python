@@ -48,9 +48,6 @@ def getChars(input_str, language='English'):
 
 
 
-#connection = createServerConnection("localhost", "root", pw)
-
-
 def createDBConnection(hostName, userName, userPassword, dbName):
     connection = None
     try:
